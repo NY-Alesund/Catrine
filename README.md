@@ -1,5 +1,5 @@
 # Catrine
- A C++ High Performance NetServer
+ A C++ High Performance Network library
 ## Introduction
 Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，要求Linux 2.6以上内核版本。同时内嵌一个简洁HTTP服务器，可实现路由分发及静态资源访问。
 ## Feature
