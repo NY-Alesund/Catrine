@@ -27,14 +27,14 @@ Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，
 
 开始构建
 
-    $ git clone git@github.com:silence1772/Sinetlib.git
-    $ cd Sinetlib
+    $ git clone git@github.com:amoscykl98/Catrine.git
+    $ cd Catrine
     $ ./build.sh
 执行完上述脚本后编译结果在新生成的build文件夹内，示例程序在build/bin下。
 
 库和头文件分别安装在/usr/local/lib和/usr/local/include，该库依赖c++11及pthread库，使用方法如下：
 
-    $ g++ main.cpp -std=c++11 -lSinetlib -lpthread
+    $ g++ main.cpp -std=c++11 -lCatrine -lpthread
 
 在执行生成的可执行文件时可能会报找不到动态库文件，需要添加动态库查找路径，首先打开配置文件：
 
