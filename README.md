@@ -18,7 +18,7 @@ Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，
 ## Model
 主线程负责连接的建立，并通过Round Robin方式将连接分配给工作线程处理
 Reactor模式结构
-http://www.blogjava.net/images/blogjava_net/dlevin/Reactor_Structures.png
+/home/amoscykl/图片/Reactor_Structures.png
 ## Build
     
 需先安装Cmake：
