@@ -325,4 +325,159 @@ ThreadPool包含两个向量,一个保存事件循环线程,另一个保存loop 
    }
 ```
 
+## Connection类
+Connection类是对一个新连接的抽象; <br>
+主要成员: <br>
+```C++
+  Eventloop* loop_;
+
+  //连接描述符
+  const int conn_sockfd_;
+  std::shared_ptr<Channel> conn_channel;
+	
+  //服务器、客户端地址结构
+  struct sockaddr_in localAddr_;
+  struct sockaddr_in peerAddr_;
+
+  //关注三个半事件(这几个回调函数通过hand**那四个事件处理函数调用)
+  //连接建立回调
+  Callback connectionCallback_;
+  //消息到达回调
+  MessageCallback  messageCallback_;
+  //写完毕回调
+  Callback writeCompleteCallback_;
+  //连接关闭回调
+  Callback closeCallback_;
+	
+  //结束自己生命的回调
+  Callback suicideCallback_;
+
+  //输入输出缓冲区
+  IOBuffer input_buffer;
+  IOBuffer output_buffer;
+```
+
+主要函数： <br>
+```C++
+//构造函数设置新连接的各种回调
+   Connection::Connection(Eventloop* loop, int conn_sockfd, const struct sockaddr_in& localAddr, const struct sockaddr_in& peerAddr)
+        : loop_(loop),
+	  conn_sockfd_(conn_sockfd),
+	  conn_channel(new Channel(conn_sockfd_)),	//连接事件分发器
+	  localAddr_(localAddr),
+	  peerAddr_(peerAddr),
+	  context_(nullptr)
+   {
+	//设置连接各种事件回调
+	conn_channel->SetReadCallback(std::bind(&Connection::HandleRead, this, std::placeholders::_1));
+	conn_channel->SetWriteCallback(std::bind(&Connection::HandleWrite,this));
+	conn_channel->SetCloseCallback(std::bind(&Connection::HandleClose,this));
+	conn_channel->EnableReadEvents();
+   }
+
+//连接建立后在分配的线程上注册事件
+void Connection::Register()
+{
+	loop_->AddChannel(conn_channel);	//添加事件分发器即在epoller_注册相应事件
+	if(connectionCallback_)
+		connectionCallback_(shared_from_this());
+}
+
+## Server类
+Server是对一个服务器的封装;  <br>
+主要成员： <br>
+```C++
+   Eventloop* loop_;
+   std::unique_ptr<ThreadPool> thread_pool;
+
+   const int accept_sockfd;
+   struct sockaddr_in addr_;
+   std::shared_ptr<Channel> accept_channel;
+
+   //描述符到连接的映射,用来保存所有连接
+   std::map<int, std::shared_ptr<Connection>> Connection_map;
+	
+   //连接建立后的回调函数
+   Connection::Callback connectionCallback_;
+   //新消息到来
+   Connection::MessageCallback messageCallback_;
+   //写完毕时
+   Connection::Callback writeCompleteCallback_;
+   //连接关闭
+   Connection::Callback closeCallback_
+```
+
+```C++
+
+Server::Server(Eventloop* loop, int port, int thread_num)
+	: loop_(loop),
+	  thread_pool(new ThreadPool(loop_, thread_num)),
+	  accept_sockfd(Util::Create())
+{
+	//创建服务器地址结构
+	bzero(&addr_,sizeof(addr_));
+	addr_.sin_family = AF_INET;
+	addr_.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr_.sin_port = htons(port);
+
+	//设置可重用及绑定地址结构
+	Util::SetReuseAddr(accept_sockfd);
+	Util::Bind(accept_sockfd, addr_);
+
+	//初始化事件,设置监听事件分发器可读回调函数(即新连接到来)
+	accept_channel = std::make_shared<Channel>(accept_sockfd);
+	accept_channel->SetReadCallback(std::bind(&Server::HandleNewConnection, this, std::placeholders::_1));
+	accept_channel->EnableReadEvents();
+}
+
+Server::~Server() 
+{
+	Util::Close(accept_sockfd);
+}
+
+//启动
+void Server::Start()
+{
+	Util::Listen(accept_sockfd);
+	loop_->AddChannel(accept_channel);	//注册监听分发器
+	thread_pool->Start();		//启动线程池，创造一定数量的线程
+}
+
+//处理新连接
+void Server::HandleNewConnection(Timestamp t)
+{
+	//客户端地址结构
+	struct sockaddr_in peer_addr;
+	bzero(&peer_addr, sizeof(peer_addr));
+	int conn_fd = Util::Accept(accept_sockfd, &peer_addr);
+
+	//从线程池中取用线程给连接使用
+	Eventloop* io_loop = thread_pool->TakeOutLoop();
+	
+	std::shared_ptr<Connection> conn = std::make_shared<Connection>(io_loop, conn_fd, addr_, peer_addr);
+	//设置新连接的各种回调
+	conn->SetConnectionCallback(connectionCallback_);
+	conn->SetMessageCallback(messageCallback_);
+	conn->SetWriteCompleteCallback(writeCompleteCallback_);
+	conn->SetCloseCallback(closeCallback_);
+
+	Connection_map[conn_fd] = conn;
+
+	//在分配到的线程上注册事件
+	io_loop->RunTask(std::bind(&Connection::Register, conn));
+}
+
+//移除连接，由线程池中线程调用
+void Server::RemoveConnection4CloseCB(const std::shared_ptr<Connection>& conn)
+{
+	loop_->AddTask(std::bind(&Server::RemoveConnection, this, conn->GetFd()));
+}
+
+//移除连接,在此线程调用
+void Server::RemoveConnection(int conn_fd)
+{
+	Connection_map.erase(conn_fd);
+}
+```
+
 
