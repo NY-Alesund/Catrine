@@ -91,21 +91,21 @@ Eventloop是事件循环类; <br>
    }
    
    //添加更改删除事件分发器,并在epoller_注册相应事件
-	  void AddChannel(std::shared_ptr<Channel> channel) { epoller_->Add(channel); }
-	  void ModChannel(std::shared_ptr<Channel> channel) { epoller_->Mod(channel); }
-	  void DelChannel(std::shared_ptr<Channel> channel) { epoller_->Del(channel); }
+   void AddChannel(std::shared_ptr<Channel> channel) { epoller_->Add(channel); }
+   void ModChannel(std::shared_ptr<Channel> channel) { epoller_->Mod(channel); }
+   void DelChannel(std::shared_ptr<Channel> channel) { epoller_->Del(channel); }
 
 
-   	//定时器队列
-	   std::unique_ptr<TimerQueue> timerQueue_;
+   //定时器队列
+   std::unique_ptr<TimerQueue> timerQueue_;
+   
+   //任务队列
+   moodycamel::ConcurrentQueue<Task> task_queue_;
 
-	   //任务队列
-	   moodycamel::ConcurrentQueue<Task> task_queue_;
-
-    //添加任务到任务队列
-    void Eventloop::AddTask(Task&& task);
+   //添加任务到任务队列
+   void Eventloop::AddTask(Task&& task);
 
      
-    //执行任务队列
-    void Eventloop::HandleTask()
+   //执行任务队列
+   void Eventloop::HandleTask()
 ```
