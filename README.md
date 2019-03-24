@@ -133,3 +133,33 @@ Epoller类是IO复用类;
    //fd到Channel事件分发器的映射，可以根据fd来得到对应的Channel
    std::map<int,std::shared_ptr<Channel>> ChannelMap;
 ```
+
+重点是Poll函数
+![Poll](https://github.com/amoscykl98/Catrine/blob/master/image/epoll.png)
+
+
+```C++
+   //等待事件发生
+   std::vector<std::shared_ptr<Channel>> Epoller::Poll()	//返回一个活跃事件集
+   {
+	//发生的活跃事件将会把epoll_event结构体放到active_events中去
+	int active_event_count = epoll_wait(epollfd_, &*active_events.begin(), active_events.size(), EPOLL_WAIT_TIME);
+
+	if(active_event_count < 0)
+		LOG_ERROR << "epoll_wait error";
+
+	std::vector<std::shared_ptr<Channel>> activeChannels_;
+	for(int i = 0; i < active_event_count; ++i)
+	{
+		//从映射表中取出Channel
+		std::shared_ptr<Channel> channel = ChannelMap[active_events[i].data.fd];
+		//设置eventbase的活跃事件
+		channel->SetRevents(active_events[i].events);
+
+		activeChannels_.push_back(channel);
+	}
+
+	return activeChannels_;
+   }
+```
+
