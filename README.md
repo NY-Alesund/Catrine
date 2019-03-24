@@ -168,7 +168,7 @@ Epoller类是IO复用类;
    }
 ```
 
-#定时器和定时器队列类
+## 定时器和定时器队列类
 Timer类是一个定时器的抽象;
 ```C++
    void Run() const { callback_(); }	//定时器到期后调用回调
@@ -178,7 +178,50 @@ Timer类是一个定时器的抽象;
    Timestamp when_;	//定时器到期时间
 ```
 
+Timerqueue定时器队列
+```C++
+   void AddTimer(const std::function<void()>& cb, Timestamp when);	//添加定时器
 
+   void ResetTimerfd(int timerfd, Timestamp when);	//更新定时器到期时间(即最早到期的定时器时间)
 
+   void HandleTimerExpired();		//定时器超时事件处理
 
+   Eventloop* loop_;
+
+   const int timerfd_;	  //定时器描述符
+   std::shared_ptr<Channel> timer_channel;	//构造定时器分发器
+
+   //小顶堆实现的定时器队列
+   using TimerPtr = std::shared_ptr<Timer>;
+   std::priority_queue<TimerPtr, std::vector<TimerPtr>, cmp> timer_queue_;   //定义一个比较器实现一个小顶堆,堆顶为最早到期的定时器
+```
+
+其中HandleTimerExpired实现
+```C++
+   //处理定时器超时
+   void TimerQueue::HandleTimerExpired()
+   {
+	//read the timerfd 
+	uint64_t exp_cnt;
+	ssize_t n = read(timerfd_, &exp_cnt, sizeof(exp_cnt));
+	if(n != sizeof(exp_cnt))
+	{
+	      LOG_ERROR << "read error";
+	}
+
+	Timestamp now(system_clock::now());
+	//处理所有到期的定时器
+	while(!timer_queue_.empty() && timer_queue_.top()->GetExpTime() < now)
+	{
+	      timer_queue_.top()->Run();	//调用回调函数
+	      timer_queue_.pop();
+	}
+
+	//重设timerfd到期时间
+	if(!timer_queue_.empty())
+	{
+	      ResetTimerfd(timerfd_,timer_queue_.top()->GetExpTime());	//新的到期时间为定时器小顶堆顶部，即最近到期的定时器
+	}
+    }
+```
 
