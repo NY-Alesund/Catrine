@@ -135,6 +135,8 @@ Epoller类是IO复用类;
 ```
 
 重点是Poll函数
+
+![Poll](https://github.com/amoscykl98/Catrine/blob/master/image/poll.png)
 ![Poll](https://github.com/amoscykl98/Catrine/blob/master/image/epoll.png)
 
 
