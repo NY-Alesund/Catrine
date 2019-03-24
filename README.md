@@ -409,12 +409,15 @@ Server是对一个服务器的封装;  <br>
 ```
 
 服务器是Reactor模式; <br>
-主线程只负责监听socket，所有的connect请求都有主线程处理。当有新连接到来时，主线程接受并建立连接。连接建立后，主线程会从线程池中获取一个线程，将连接分配给该线程，以后该连接上的所有请求都只有该线程处理。 <br>
+主线程只负责监听socket，所有的connect请求都有主线程处理。当有新连接到来时，主线程接受并建立连接。
+![Reactor](https://github.com/amoscykl98/Catrine/blob/master/image/%E4%B8%BB%E7%BA%BF%E7%A8%8B%E8%BF%9E%E6%8E%A5.png)
+连接建立后，主线程会从线程池中获取一个线程，将连接分配给该线程，以后该连接上的所有请求都只有该线程处理。 <br>
+![Reactor](https://github.com/amoscykl98/Catrine/blob/master/image/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%88%86%E5%8F%91.png)
 
-实际上，我们抽象出来的连接Connection仍旧是由主线程管理的，只不过是把它的函数拿到工作线程上执行，包括消息到达时的处理函数、连接断开的处理函数等。<br>
-
+实际上，我们抽象出来的连接Connection仍旧是由主线程管理的，只不过是把它的函数拿到工作线程上执行，包括消息到达时的处理函数、连接断开的处理函数等。
+![Reactor](https://github.com/amoscykl98/Catrine/blob/master/image/%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B.png)
 当连接断开时，在工作线程上如何让Connection对象销毁掉呢？我的实现是在连接断开的处理函数里向主线程投放一个任务，请求他把这个Connnection对象销毁掉，这样销毁Connection的工作就由主线程Looper来干，而不是这个Connection自己。
-
+![Reactor](https://github.com/amoscykl98/Catrine/blob/master/image/%E8%BF%9E%E6%8E%A5%E9%94%80%E6%AF%81.png)
 
 ```C++
 Server::Server(Eventloop* loop, int port, int thread_num)
