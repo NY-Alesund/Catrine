@@ -226,7 +226,7 @@ Timerqueue定时器队列
     }
 ```
 
-## 事件循环线程类和线程池
+## 事件循环线程类
 EventloopThread是事件循环线程构造类,由线程池调用生产事件循环线程; <br>
 主要成员:	<br>
 ```C++
@@ -269,6 +269,50 @@ EventloopThread是事件循环线程构造类,由线程池调用生产事件循�
 	}
 
 	loop.Start();	//运行新线程
+   }
+```
+
+
+## 线程池
+ThreadPool包含两个向量,一个保存事件循环线程,另一个保存loop <br>
+主要成员： <br>
+```C++
+   //线程池所在的线程
+   Eventloop* base_loop_;
+
+   //线程池中线程数量
+   int thread_num_;
+   //指向线程池中要取出的下一个线程
+   int next_;
+
+   std::vector<std::unique_ptr<EventloopThread>> loop_threads_;
+   std::vector<Eventloop*> loopers_;
+};
+```
+主要函数： <br>
+```C++
+   //启动线程池，即创建相应数量的线程放入池中
+   void ThreadPool::Start()
+   {
+	for(int i = 0; i < thread_num_; ++i)
+	{
+		std::unique_ptr<EventloopThread> t(new EventloopThread()); //生产事件循环线程
+		loopers_.push_back(t->GetLoop());
+		loop_threads_.push_back(std::move(t));
+	}
+   }
+
+   //取出loop消费，简单的循环取用
+   Eventloop* ThreadPool::TakeOutLoop()
+   {
+	Eventloop* loop = base_loop_;
+	if(!loopers_.empty())
+	{
+		loop = loopers_[next_];
+		next_ = (next_ + 1) % thread_num_;
+	}
+
+	return loop;
    }
 ```
 
