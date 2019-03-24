@@ -65,6 +65,47 @@ channel是事件分发器类; <br>
   * 首先绑定Channel要处理的fd <br>
   * 注册fd上需要监听的事件，如果是常用事件(读写等)的话，直接调用接口 enable*** 来注册对应fd上的事件，与之对应的是 disable*** 用来销毁特定事件 <br>
   * 通过 set_callback来设置事件发生时的回调函数 <br>
-  * 分发事件处理HandleEvent函数，根据revents_返回的活跃事件调用相应事件处理函数，由Eventloop调用。
-  
+  * 分发事件处理HandleEvent函数，根据revents_返回的活跃事件调用相应事件处理函数，由Eventloop调用 <br>
+ 
 
+## Eventloop类
+Eventloop是事件循环类; <br>
+主要成员：
+```C++
+	  
+   //开始事件循环
+   void Eventloop::Start()
+   {
+	      std::vector<std::shared_ptr<Channel>> activeChannels_;	//活跃的事件集
+
+	      while(!quit_)
+	      {
+		         activeChannels_.clear();
+		         activeChannels_ = epoller_->Poll();	//Poll返回活跃的事件集
+		         for (auto& it : activeChannels_)
+		         {
+			            it->HandleEvent();		//处理活跃事件集的事件
+		         }
+		         HandleTask();	//处理一些其它的任务
+	      }
+   }
+   
+   //添加更改删除事件分发器,并在epoller_注册相应事件
+	  void AddChannel(std::shared_ptr<Channel> channel) { epoller_->Add(channel); }
+	  void ModChannel(std::shared_ptr<Channel> channel) { epoller_->Mod(channel); }
+	  void DelChannel(std::shared_ptr<Channel> channel) { epoller_->Del(channel); }
+
+
+   	//定时器队列
+	   std::unique_ptr<TimerQueue> timerQueue_;
+
+	   //任务队列
+	   moodycamel::ConcurrentQueue<Task> task_queue_;
+
+    //添加任务到任务队列
+    void Eventloop::AddTask(Task&& task);
+
+     
+    //执行任务队列
+    void Eventloop::HandleTask()
+```
