@@ -382,6 +382,7 @@ void Connection::Register()
 	if(connectionCallback_)
 		connectionCallback_(shared_from_this());
 }
+```
 
 ## Server类
 Server是对一个服务器的封装;  <br>
@@ -407,8 +408,15 @@ Server是对一个服务器的封装;  <br>
    Connection::Callback closeCallback_
 ```
 
-```C++
+服务器是Reactor模式; <br>
+主线程只负责监听socket，所有的connect请求都有主线程处理。当有新连接到来时，主线程接受并建立连接。连接建立后，主线程会从线程池中获取一个线程，将连接分配给该线程，以后该连接上的所有请求都只有该线程处理。 <br>
 
+实际上，我们抽象出来的连接Connection仍旧是由主线程管理的，只不过是把它的函数拿到工作线程上执行，包括消息到达时的处理函数、连接断开的处理函数等。<br>
+
+当连接断开时，在工作线程上如何让Connection对象销毁掉呢？我的实现是在连接断开的处理函数里向主线程投放一个任务，请求他把这个Connnection对象销毁掉，这样销毁Connection的工作就由主线程Looper来干，而不是这个Connection自己。
+
+
+```C++
 Server::Server(Eventloop* loop, int port, int thread_num)
 	: loop_(loop),
 	  thread_pool(new ThreadPool(loop_, thread_num)),
@@ -470,7 +478,7 @@ void Server::HandleNewConnection(Timestamp t)
 //移除连接，由线程池中线程调用
 void Server::RemoveConnection4CloseCB(const std::shared_ptr<Connection>& conn)
 {
-	loop_->AddTask(std::bind(&Server::RemoveConnection, this, conn->GetFd()));
+	loop_->AddTask(std::bind(&Server::RemoveConnection, this, conn->GetFd()));	//将销毁的任务交给主线程
 }
 
 //移除连接,在此线程调用
