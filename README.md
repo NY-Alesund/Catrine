@@ -70,7 +70,7 @@ channel是事件分发器类; <br>
 
 ## Eventloop类
 Eventloop是事件循环类; <br>
-主要成员：
+
 ```C++
 	  
    //开始事件循环
