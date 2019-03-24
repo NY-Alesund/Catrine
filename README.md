@@ -168,3 +168,17 @@ Epoller类是IO复用类;
    }
 ```
 
+#定时器和定时器队列类
+Timer类是一个定时器的抽象;
+```C++
+   void Run() const { callback_(); }	//定时器到期后调用回调
+   Timestamp GetExpTime() const { return when_; } //获取定时器到期时间
+   
+   const std::function<void()> callback_; //定时器超时回调函数
+   Timestamp when_;	//定时器到期时间
+```
+
+
+
+
+
