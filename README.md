@@ -11,7 +11,7 @@ Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，
 * 使用智能指针及RAII机制管理对象生命期
 * 使用状态机解析HTTP请求，支持HTTP长连接
 * HTTP服务器支持URL路由分发及访问静态资源，可实现RESTful架构
-## Envoirment
+## Environment
 * OS： Ubuntu 18.04
 * Complier： g++ 7.3.0
 * Build： CMake
