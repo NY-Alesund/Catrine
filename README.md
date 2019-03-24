@@ -54,12 +54,12 @@ Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，
 channel是事件分发器类; <br>
 主要成员：<br>
 ```C++
-   	//channel负责的文件描述符
-	   int fd_;	
-	   //关注的事件
-	   int events_;
-   	//epoller返回的活跃事件
-	   int revents_;
+   //channel负责的文件描述符
+   int fd_;	
+   //关注的事件
+   int events_;
+   //epoller返回的活跃事件
+   int revents_;
 ```
 主要作用是： <br>
   * 首先绑定Channel要处理的fd <br>
