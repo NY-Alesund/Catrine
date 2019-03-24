@@ -62,8 +62,8 @@ channel是事件分发器类; <br>
 	   int revents_;
 ```
 主要作用是： <br>
-  *首先绑定Channel要处理的fd <br>
-  *注册fd上需要监听的事件，如果是常用事件(读写等)的话，直接调用接口 enable*** 来注册对应fd上的事件，与之对应的是 disable*** 用来销毁特定事件 <br>
-  *通过 set_callback来设置事件发生时的回调函数 <br>
+  * 首先绑定Channel要处理的fd <br>
+  * 注册fd上需要监听的事件，如果是常用事件(读写等)的话，直接调用接口 enable*** 来注册对应fd上的事件，与之对应的是 disable*** 用来销毁特定事件 <br>
+  * 通过 set_callback来设置事件发生时的回调函数 <br>
   
 
