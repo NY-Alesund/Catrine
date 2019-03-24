@@ -65,5 +65,6 @@ channel是事件分发器类; <br>
   * 首先绑定Channel要处理的fd <br>
   * 注册fd上需要监听的事件，如果是常用事件(读写等)的话，直接调用接口 enable*** 来注册对应fd上的事件，与之对应的是 disable*** 用来销毁特定事件 <br>
   * 通过 set_callback来设置事件发生时的回调函数 <br>
+  * 分发事件处理HandleEvent函数，根据revents_返回的活跃事件调用相应事件处理函数，由Eventloop调用。
   
 
