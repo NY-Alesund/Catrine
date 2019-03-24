@@ -25,6 +25,7 @@ Eventloop* EventloopThread::GetLoop()
 {
 	//互斥锁与条件变量配合使用，当新线程运行起来后才能够得到loop的指针
 	{	
+		//退出此作用域时锁失效
 		std::unique_lock<std::mutex> lock(mutex_);
 		while (loop_ == nullptr)
 		{
@@ -38,8 +39,8 @@ Eventloop* EventloopThread::GetLoop()
 void EventloopThread::ThreadFunc()
 {
 	Eventloop loop;
-	{
-		std::unique_lock<std::mutex> lock(mutex_);
+	{	//退出此作用域时锁就失效,不会造成锁争用
+		std::unique_lock<std::mutex> lock(mutex_);	
 		loop_ = &loop;
 		//得到了loop的指针,通知wait
 		condition_.notify_one();
