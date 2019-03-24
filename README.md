@@ -45,3 +45,24 @@ Catrine是一个基于Reactor模式的多线程网络库，附有异步日志，
 使修改生效：
 
     $ sudo /sbin/ldconfig
+    
+    
+    
+# 源码剖析
+
+## Channel类
+channel是事件分发器类;
+主要成员：
+   	//channel负责的文件描述符
+	   int fd_;	
+	   //关注的事件
+	   int events_;
+   	//epoller返回的活跃事件
+	   int revents_;
+
+主要作用是：
+  1.首先绑定Channel要处理的fd
+  2.注册fd上需要监听的事件，如果是常用事件(读写等)的话，直接调用接口 enable*** 来注册对应fd上的事件，与之对应的是 disable*** 用来销毁特定事件
+  3.通过 set_callback来设置事件发生时的回调函数
+  
+
