@@ -70,6 +70,9 @@ channel是事件分发器类; <br>
 
 ## Eventloop类
 Eventloop是事件循环类; <br>
+每个loop都有个任务队列
+![任务队列](https://github.com/amoscykl98/Catrine/blob/master/image/%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97.png)
+
 ![事件循环类](https://github.com/amoscykl98/Catrine/blob/master/image/Eventloop.png)
 
 ```C++
