@@ -47,7 +47,7 @@ public:
 	//是否注册可读事件
 	bool IsReading() const { return events_ & (EPOLLIN | EPOLLPRI); }
 
-	//分发事件处理,由looper调用
+	//分发事件处理,由Eventloop调用
 	void HandleEvent();
 
 	//设置相应的事件回调函数
