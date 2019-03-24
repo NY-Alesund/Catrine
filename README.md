@@ -179,6 +179,7 @@ Timer类是一个定时器的抽象;
 ```
 
 Timerqueue定时器队列
+![定时器队列](https://github.com/amoscykl98/Catrine/blob/master/image/%E5%AE%9A%E6%97%B6%E5%99%A8.png)
 ```C++
    void AddTimer(const std::function<void()>& cb, Timestamp when);	//添加定时器
 
