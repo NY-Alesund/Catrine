@@ -226,3 +226,50 @@ Timerqueue定时器队列
     }
 ```
 
+## 事件循环线程类和线程池
+EventloopThread是事件循环线程构造类,由线程池调用生产事件循环线程; <br>
+主要成员:	<br>
+```C++
+   Eventloop* GetLoop();
+   //新线程所运行的函数，即执行Eventloop
+   void ThreadFunc();
+
+   Eventloop* loop_;	//
+   std::thread thread_;	
+
+   //互斥锁与条件变量配合使用
+   std::mutex mutex_;
+   std::condition_variable condition_;
+```
+
+主要函数:
+```C++
+   Eventloop* EventloopThread::GetLoop()
+   {
+	//互斥锁与条件变量配合使用，当新线程运行起来后才能够得到loop的指针
+	{	
+		std::unique_lock<std::mutex> lock(mutex_);	//锁退出此作用域就失效
+		while (loop_ == nullptr)
+		{
+			condition_.wait(lock);
+		}
+	}
+
+	return loop_;
+   }
+
+   void EventloopThread::ThreadFunc()	//构造函数初始化线程时此线程函数就开始运行
+   {
+	Eventloop loop;
+	{
+		std::unique_lock<std::mutex> lock(mutex_);	//锁退出此作用域就失效
+		loop_ = &loop;
+		//得到了loop的指针,通知wait
+		condition_.notify_one();
+	}
+
+	loop.Start();	//运行新线程
+   }
+```
+
+
